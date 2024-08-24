@@ -40,6 +40,10 @@ namespace KK_BetterSquirt
 		internal static ConfigEntry<bool> Cfg_SquirtHD { get; private set; }
 		internal static ConfigEntry<Behavior> Cfg_Duration { get; private set; }
 		internal static ConfigEntry<Behavior> Cfg_Amount { get; private set; }
+		internal static ConfigEntry<float> Cfg_VectorX { get; private set; }
+		internal static ConfigEntry<float> Cfg_VectorY { get; private set; }
+		internal static ConfigEntry<float> Cfg_VectorZ { get; private set; }
+		internal static ConfigEntry<float> Cfg_Angle { get; private set; }
 
 		private void Awake()
 		{
@@ -86,6 +90,34 @@ namespace KK_BetterSquirt
 				defaultValue: Behavior.Auto,
 				"Amount and volume of the improved squirting when triggered manually by the hotkey" +
 				"\n\nIn auto mode it depends on the girl's excitement gauge");
+
+			Cfg_VectorX = Config.Bind(
+				section: "Adjustments",
+				key: "VectorX",
+				defaultValue: -0.0075f,
+				new ConfigDescription("Vector X",
+					new AcceptableValueRange<float>(-1f, 1f)));
+
+			Cfg_VectorY = Config.Bind(
+				section: "Adjustments",
+				key: "VectorY",
+				defaultValue: -0.05f,
+				new ConfigDescription("Vector Y",
+					new AcceptableValueRange<float>(-1f, 1f)));
+
+			Cfg_VectorZ = Config.Bind(
+				section: "Adjustments",
+				key: "VectorZ",
+				defaultValue: -0.01f,
+				new ConfigDescription("Vector Z",
+					new AcceptableValueRange<float>(-1f, 1f)));
+
+			Cfg_Angle = Config.Bind(
+				section: "Adjustments",
+				key: "Angle",
+				defaultValue: 70f,
+				new ConfigDescription("Angle",
+					new AcceptableValueRange<float>(0, 180)));
 
 
 

@@ -118,9 +118,8 @@ namespace KK_BetterSquirt
 				}
 
 				//Do not play twitch animation during orgasm, since orgasm already has its own animation
-				if (trigger != TriggerType.Orgasm)
-					burstActions += () =>
-					hitReactionPlayInfo.Invoke(Hand, new object[] { (int)AibuColliderKind.reac_bodydown, CheckTwitchSECond() });
+				burstActions += () =>
+				hitReactionPlayInfo.Invoke(Hand, new object[] { (int)AibuColliderKind.reac_bodydown, CheckTwitchSECond() });
 
 				if (burstActions != null)
 					StartCoroutine(OnEachBurst(burstActions, burstTimes));
@@ -259,7 +258,27 @@ namespace KK_BetterSquirt
 				new AnimationCurve(
 					new Keyframe(0.2f/DURATION_FULL, Random.Range(0.8f, 1)),
 					new Keyframe(2.4f/DURATION_FULL, Random.Range(0.9f, 1.2f)),
-					new Keyframe(2.7f/DURATION_FULL, Random.Range(0.1f, 0.3f)))
+					new Keyframe(2.7f/DURATION_FULL, Random.Range(0.1f, 0.3f))),
+
+				new AnimationCurve(
+					new Keyframe(0.1f/DURATION_FULL, Random.Range(0.75f, 0.9f)),
+					new Keyframe(0.4f/DURATION_FULL, Random.Range(0.75f, 0.9f)),
+					new Keyframe(0.5f/DURATION_FULL, 0),
+					new Keyframe(0.7f/DURATION_FULL, Random.Range(0.1f, 0.3f))),
+
+				new AnimationCurve(
+					new Keyframe(0.2f/DURATION_FULL, Random.Range(0.2f, 0.4f)),
+					new Keyframe(0.4f/DURATION_FULL, Random.Range(0.2f, 0.4f))),
+
+				new AnimationCurve(
+					new Keyframe(0.1f/DURATION_FULL, Random.Range(0.9f, 1.1f)),
+					new Keyframe(0.2f/DURATION_FULL, 0),
+					new Keyframe(0.5f/DURATION_FULL, 0),
+					new Keyframe(0.6f/DURATION_FULL, Random.Range(0.1f, 0.3f))),
+
+				new AnimationCurve(
+					new Keyframe(0.3f/DURATION_FULL, Random.Range(0.6f, 0.8f)),
+					new Keyframe(0.5f/DURATION_FULL, Random.Range(0.2f, 0.4f)))
 
 			};
 

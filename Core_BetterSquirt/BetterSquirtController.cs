@@ -20,6 +20,9 @@ namespace KK_BetterSquirt
 		private const string ASSETBUNDLE = "addcustomeffect.unity3d";
 		private const string ASSETNAME = "SprayRefractive";
 
+		private const string ASSETBUNDLE2 = "vfx_port.unity3d";
+		//private const string ASSETNAME2 = "Jet03";Fountain07
+		private const string ASSETNAME2 = "Fountain07";
 		private static object _randSio;
 		private static Vector2 _lastDragVector;
 
@@ -85,8 +88,19 @@ namespace KK_BetterSquirt
 			HVoiceCtrl hVoiceCtrl = procTraverse.Field("voice").GetValue<HVoiceCtrl>();
 			GameObject asset = GetParticleAsset();
 
+			var charas = procTraverse.Field("lstFemale").GetValue<List<ChaControl>>();
+			var attachPointList = new List<Transform>();
+			foreach (var chara in charas)
+			{
+				var attachPoint = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_waist01/cf_j_waist02/cf_d_kokan/cf_j_kokan/cf_n_pee");
+				attachPoint.localPosition = new Vector3(0f, -0.01f, -0.01f);
+				attachPointList.Add(attachPoint);
+			}
+
 			//Get vanilla ParticleSystems that are not null, so theoretically there would be one ParticleSystem per female.
 			//"particle" corresponds to the first female, and "particle1" corresponds to the second female if she exists
+			// It does not correspond in KKS. All points at 0 index girl.
+
 			string[] particleFields = { "particle", "particle1" };
 			List<ParticleSystem> vanillaParticles = particleFields
 				.Select(field => procTraverse.Field(field).GetValue<HParticleCtrl>())
@@ -104,9 +118,11 @@ namespace KK_BetterSquirt
 			}
 			else
 				handCtrls = procTraverse.Field("vrHands").GetValue<MonoBehaviour[]>().ToList();
-
-
+#if KK
 			for (int i = 0; i < vanillaParticles.Count; i++)
+#else
+            for (int i = 0; i < attachPointList.Count; i++)
+#endif
 			{
 				if (vanillaParticles[i] == null || handCtrls[i] == null)
 				{
@@ -116,11 +132,15 @@ namespace KK_BetterSquirt
 
 				GameObject newGameObject = Instantiate(asset);
 				newGameObject.name = asset.name;
+#if KK
 				newGameObject.transform.SetParent(vanillaParticles[i].transform.parent);
+#else
+				newGameObject.transform.SetParent(attachPointList[i].transform);
+#endif
 				//Adjust the position and rotation of the new Particle System to make sure the stream comes out of the manko at the right place and the right angle
-				newGameObject.transform.localPosition = new Vector3(-0.01f, 0f, 0f);
-				newGameObject.transform.localRotation = Quaternion.Euler(new Vector3(60f, 0, 0f));
-				newGameObject.transform.localScale = Vector3.one;
+				newGameObject.transform.localPosition = Vector3.zero;// new Vector3(Cfg_VectorX.Value, Cfg_VectorY.Value, Cfg_VectorZ.Value);
+				newGameObject.transform.localRotation = Quaternion.Euler(new Vector3(Cfg_Angle.Value, 0, 0f));
+				//newGameObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
 
 				var charaSquirt = proc.gameObject.AddComponent<CharaSquirt>();
 				charaSquirt.Init(vanillaParticles[i], newGameObject.GetComponent<ParticleSystem>(), handCtrls[i], hVoiceCtrl.nowVoices[i]);
@@ -147,6 +167,7 @@ namespace KK_BetterSquirt
 			//Attempt to load particle asset from zipmod first before loading the embedded resource
 			//"clone" is set to true to allow the loaded asset to be destroyed after being loaded (to prevent crash) without causing cab-string conflict the next time the asset is loaded
 			GameObject asset = CommonLib.LoadAsset<GameObject>($"studio/{ASSETBUNDLE}", ASSETNAME, clone: true);
+			GameObject asset2 = CommonLib.LoadAsset<GameObject>($"studio/azoic/{ASSETBUNDLE2}", ASSETNAME2, clone: true);
 			//If failed to load from zipmod, load from embedded resource
 			if (asset == null)
 			{
@@ -165,13 +186,26 @@ namespace KK_BetterSquirt
 				var main = particle.main;
 				main.loop = false;
 				main.playOnAwake = false;
+				//main.scalingMode = ParticleSystemScalingMode.Local;
 				if (main.duration < DURATION_FULL)
 					main.duration = DURATION_FULL;
 			}
-
+			foreach (var particle in asset2.GetComponentsInChildren<ParticleSystem>())
+			{
+				var main = particle.main;
+				main.loop = false;
+				main.playOnAwake = false;
+				//main.scalingMode = ParticleSystemScalingMode.Local;
+				if (main.duration < DURATION_FULL)
+					main.duration = DURATION_FULL;
+				//main.startColor
+			}
+			Instantiate(asset2.gameObject, asset.transform);
+			Destroy(asset2);
 			//Create two additional water streams that can be toggled on/off later on
 			//One overlaps with the original stream to enhance its intensity or to split off vertically, while the other goes off at a slightly off angle to split off horizontally
-			GameObject stream = asset.FindChild("WaterStreamEffectCnstSpd5");
+			GameObject stream = (asset.FindChild("WaterStreamEffectCnstSpd5"));
+
 			if (stream != null)
 			{
 				GameObject side = Instantiate(stream, parent: asset.transform);
@@ -223,7 +257,8 @@ namespace KK_BetterSquirt
 					if (!TouchChanceCalc())
 						continue;
 				}
-
+				if (trigger == TriggerType.Orgasm && Random.value > 0.5f)
+					continue;
 				anySquirtFired = charaSquirt.Squirt(softSE, trigger, sound) || anySquirtFired;
 			}
 
@@ -244,7 +279,7 @@ namespace KK_BetterSquirt
 			else
 			{
 				//Modify TouchChance.Value by (-a^5x)/(x-a^5-1), with "a" being the excitement gauge value converted between 0.55 to 1.4
-				float multiplier = (Flags.gaugeFemale / 70f) * (1.4f - 0.55f) + 0.55f;
+				float multiplier = (Flags.gaugeFemale * 0.0142f) * (1.4f - 0.55f) + 0.55f;
 
 				//Alledgely faster than Math.Pow(). Not actually tested. In StackOverflow we trust.
 				for (int i = 0; i < 5; i++)
@@ -362,9 +397,9 @@ namespace KK_BetterSquirt
 			// This does not happen in 3P
 			[HarmonyPrefix]
 			[HarmonyPatch(typeof(HandCtrl), "JudgeProc")]
-			private static void OnCaressStart(MonoBehaviour __instance)
+			private static void OnCaressStart(HandCtrl __instance)
 			{
-				if (Traverse.Create(__instance).Field("selectKindTouch").GetValue<AibuColliderKind>() == AibuColliderKind.kokan)
+				if (__instance.IsUseAreaItemActive(2))// Traverse.Create(__instance).Field("selectKindTouch").GetValue<AibuColliderKind>() == AibuColliderKind.kokan)
 					RunSquirts(softSE: true, trigger: TriggerType.Touch);
 			}
 
