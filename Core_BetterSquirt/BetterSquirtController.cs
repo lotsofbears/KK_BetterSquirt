@@ -85,8 +85,12 @@ namespace KK_BetterSquirt
 			HVoiceCtrl hVoiceCtrl = procTraverse.Field("voice").GetValue<HVoiceCtrl>();
 			GameObject asset = GetParticleAsset();
 
+			
+
 			//Get vanilla ParticleSystems that are not null, so theoretically there would be one ParticleSystem per female.
 			//"particle" corresponds to the first female, and "particle1" corresponds to the second female if she exists
+			// It does not correspond in KKS. All points at 0 index girl.
+
 			string[] particleFields = { "particle", "particle1" };
 			List<ParticleSystem> vanillaParticles = particleFields
 				.Select(field => procTraverse.Field(field).GetValue<HParticleCtrl>())
@@ -105,8 +109,20 @@ namespace KK_BetterSquirt
 			else
 				handCtrls = procTraverse.Field("vrHands").GetValue<MonoBehaviour[]>().ToList();
 
+			var charas = procTraverse.Field("lstFemale").GetValue<List<ChaControl>>();
+			var attachPointList = new List<Transform>();
+			foreach (var chara in charas)
+			{
+				var attachPoint = chara.objBodyBone.transform.Find("cf_n_height/cf_j_hips/cf_j_waist01/cf_j_waist02/cf_d_kokan/cf_j_kokan/cf_n_pee");
+				attachPoint.localPosition = new Vector3(0f, -0.01f, -0.01f);
+				attachPointList.Add(attachPoint);
+			}
 
+#if KK
 			for (int i = 0; i < vanillaParticles.Count; i++)
+#else
+			for (int i = 0; i < attachPointList.Count; i++)
+#endif
 			{
 				if (vanillaParticles[i] == null || handCtrls[i] == null)
 				{
@@ -116,10 +132,14 @@ namespace KK_BetterSquirt
 
 				GameObject newGameObject = Instantiate(asset);
 				newGameObject.name = asset.name;
+#if KK
 				newGameObject.transform.SetParent(vanillaParticles[i].transform.parent);
+#else
+				newGameObject.transform.SetParent(attachPointList[i].transform);
+#endif
 				//Adjust the position and rotation of the new Particle System to make sure the stream comes out of the manko at the right place and the right angle
-				newGameObject.transform.localPosition = new Vector3(-0.01f, 0f, 0f);
-				newGameObject.transform.localRotation = Quaternion.Euler(new Vector3(60f, 0, 0f));
+				//newGameObject.transform.localPosition = Vector3.zero;
+				newGameObject.transform.localRotation = Quaternion.Euler(new Vector3(Cfg_Angle.Value, 0f, 0f));
 				newGameObject.transform.localScale = Vector3.one;
 
 				var charaSquirt = proc.gameObject.AddComponent<CharaSquirt>();
