@@ -138,7 +138,7 @@ namespace KK_BetterSquirt
 				newGameObject.transform.SetParent(attachPointList[i].transform);
 #endif
 				//Adjust the position and rotation of the new Particle System to make sure the stream comes out of the manko at the right place and the right angle
-				//newGameObject.transform.localPosition = Vector3.zero;
+				newGameObject.transform.localPosition = Vector3.zero;
 				newGameObject.transform.localRotation = Quaternion.Euler(new Vector3(Cfg_Angle.Value, 0f, 0f));
 				newGameObject.transform.localScale = Vector3.one;
 
